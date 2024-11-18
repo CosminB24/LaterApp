@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50;
+  }
+}
+
+@layer components {
+  .calendar-day {
+    @apply relative h-14 flex items-center justify-center rounded-xl transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer dark:text-gray-300;
+  }
+
+  .calendar-day.other-month {
+    @apply text-gray-400 dark:text-gray-600;
+  }
+
+  .calendar-day.selected {
+    @apply bg-blue-50 dark:bg-blue-900/50 font-medium text-blue-600 dark:text-blue-400;
+  }
+
+  .calendar-day.today {
+    @apply font-semibold ring-2 ring-blue-100 dark:ring-blue-900;
+  }
+
+  .task-card {
+    @apply p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200;
+  }
+
+  .btn {
+    @apply px-4 py-2 rounded-lg transition-all duration-200 font-medium;
+  }
+
+  .btn-primary {
+    @apply bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow-md dark:bg-blue-500 dark:hover:bg-blue-600;
+  }
+
+  .btn-icon {
+    @apply p-2 rounded-lg transition-colors duration-200;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors;
+}
