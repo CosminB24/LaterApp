@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { Plus, Edit2, Trash2, Clock } from 'lucide-react';
 import { Task } from '../types';
@@ -13,8 +13,15 @@ interface TaskListProps {
 }
 
 export default function TaskList({ selectedDate, tasks, onAddTask, onEditTask, onDeleteTask }: TaskListProps) {
-  const dayTasks = tasks.filter(task => task.date === format(selectedDate, 'yyyy-MM-dd'))
-    .sort((a, b) => a.time.localeCompare(b.time));
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  
+  const dayTasks = tasks
+    .filter(task => task.date === format(selectedDate, 'yyyy-MM-dd'))
+    .sort((a, b) => {
+      const timeCompare = a.time.localeCompare(b.time);
+      if (timeCompare !== 0) return timeCompare;
+      return a.title.localeCompare(b.title);
+    });
 
   return (
     <div className="flex flex-col gap-6">
@@ -42,33 +49,47 @@ export default function TaskList({ selectedDate, tasks, onAddTask, onEditTask, o
         ) : (
           <div className="space-y-4 max-h-[calc(100vh-24rem)] overflow-y-auto pr-2">
             {dayTasks.map((task) => (
-              <div key={task.id} className="task-card">
-                <div className="flex items-start justify-between gap-4">
+              <div 
+                key={task.id} 
+                className={`p-3 rounded-xl bg-blue-50/50 border border-blue-100 dark:border-blue-800/50 dark:bg-blue-900/10 cursor-pointer transition-all ${
+                  selectedTask?.id === task.id 
+                    ? 'ring-2 ring-blue-500 bg-blue-100 dark:bg-blue-900/30' 
+                    : 'hover:bg-blue-100/50 dark:hover:bg-blue-900/20'
+                }`}
+                onClick={() => setSelectedTask(selectedTask?.id === task.id ? null : task)}
+              >
+                <div className="flex items-center justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-sm font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
                         {task.time}
                       </span>
+                      <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                        {task.title}
+                      </h3>
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-1">
-                      {task.title}
-                    </h3>
                     {task.description && (
-                      <p className="text-gray-600 text-sm line-clamp-2">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1 mt-0.5">
                         {task.description}
                       </p>
                     )}
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 shrink-0">
                     <button
-                      onClick={() => onEditTask(task)}
-                      className="btn-icon text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEditTask(task);
+                      }}
+                      className="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-100 rounded-lg"
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() => onDeleteTask(task.id)}
-                      className="btn-icon text-gray-500 hover:text-red-600 hover:bg-red-50"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteTask(task.id);
+                      }}
+                      className="p-1 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -82,7 +103,7 @@ export default function TaskList({ selectedDate, tasks, onAddTask, onEditTask, o
       
       <WeatherWidget 
         selectedDate={selectedDate}
-        selectedTask={dayTasks.length > 0 ? dayTasks[0] : null}
+        selectedTask={selectedTask}
       />
     </div>
   );

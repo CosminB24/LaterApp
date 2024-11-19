@@ -38,6 +38,16 @@ export default function Calendar({ selectedDate, currentMonth, onDateSelect, tas
     }
   };
 
+  const WEEKDAYS = [
+    { key: 'sun', label: 'D' },
+    { key: 'mon', label: 'L' },
+    { key: 'tue', label: 'M' },
+    { key: 'wed', label: 'M' },
+    { key: 'thu', label: 'J' },
+    { key: 'fri', label: 'V' },
+    { key: 'sat', label: 'S' }
+  ];
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
       <div className="flex items-center justify-between mb-8">
@@ -137,9 +147,9 @@ export default function Calendar({ selectedDate, currentMonth, onDateSelect, tas
       )}
 
       <div className="grid grid-cols-7 gap-4 mb-4">
-        {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((day) => (
-          <div key={day} className="text-center text-sm font-medium text-gray-500">
-            {day}
+        {WEEKDAYS.map((day) => (
+          <div key={day.key} className="text-center text-sm font-medium text-gray-500">
+            {day.label}
           </div>
         ))}
       </div>
@@ -153,7 +163,7 @@ export default function Calendar({ selectedDate, currentMonth, onDateSelect, tas
 
           return (
             <button
-              key={idx}
+              key={`${format(day, 'd')}-${idx}`}
               onClick={() => onDateSelect(day)}
               className={`calendar-day ${!isCurrentMonth ? 'other-month' : ''} 
                          ${isSelected ? 'selected' : ''} 
