@@ -6,6 +6,7 @@ import TaskForm from './TaskForm';
 import Navigation from './Navigation';
 import { Task } from '../types';
 import { taskService } from '../services/taskService';
+import SearchBar from './SearchBar';
 
 export default function Dashboard() {
   const { user } = useUser();
@@ -16,6 +17,7 @@ export default function Dashboard() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const loadTasks = async () => {
@@ -37,31 +39,33 @@ export default function Dashboard() {
     loadTasks();
   }, [user?.id]);
 
-  const handleSaveTask = async (taskData: Omit<Task, 'id' | 'userId'>) => {
+  const handleSaveTask = async (taskData: Omit<Task, 'id' | 'userId'>[]) => {
     if (!user?.id) return;
     
     try {
-      console.log('Saving task for user:', user.id);
+      console.log('Saving tasks for user:', user.id);
       
       if (editingTask) {
         await taskService.updateTask(editingTask.id, {
-          ...taskData,
+          ...taskData[0],
           userId: user.id
         });
         setTasks(prevTasks => 
           prevTasks.map(task => 
-            task.id === editingTask.id ? { ...task, ...taskData } : task
+            task.id === editingTask.id ? { ...task, ...taskData[0] } : task
           )
         );
       } else {
-        const newTask = await taskService.addTask(user.id, taskData);
-        setTasks(prevTasks => [...prevTasks, newTask]);
+        const newTasks = await Promise.all(
+          taskData.map(task => taskService.addTask(user.id, task))
+        );
+        setTasks(prevTasks => [...prevTasks, ...newTasks]);
       }
       
       setIsFormOpen(false);
       setEditingTask(null);
     } catch (error) {
-      console.error('Eroare la salvarea task-ului:', error);
+      console.error('Eroare la salvarea task-urilor:', error);
     }
   };
 
@@ -86,6 +90,11 @@ export default function Dashboard() {
     setIsFormOpen(true);
   };
 
+  const filteredTasks = tasks.filter(task => 
+    task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    task.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (error) {
     return (
       <div className="p-4 bg-red-50 rounded-lg text-red-600">
@@ -104,29 +113,50 @@ export default function Dashboard() {
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
       <Navigation />
       
-      <div className="flex-1 flex gap-6 p-6 overflow-hidden">
-        <div className="w-[400px]">
-          <Calendar
-            selectedDate={selectedDate}
-            currentMonth={currentMonth}
-            onDateSelect={setSelectedDate}
+      <div className="flex-1 p-6 overflow-hidden">
+        <div className="mb-6">
+          <SearchBar
             tasks={tasks}
-            onPrevMonth={() => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1))}
-            onNextMonth={() => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1))}
+            onTaskSelect={(task) => {
+              setSelectedDate(new Date(task.date));
+              // Găsim referința la TaskList și setăm task-ul selectat
+              const taskListRef = document.querySelector('[data-component="task-list"]');
+              if (taskListRef) {
+                taskListRef.dispatchEvent(
+                  new CustomEvent('selectTask', { detail: task })
+                );
+              }
+            }}
           />
         </div>
 
-        <div className="flex-1 max-w-3xl">
-          <TaskList
-            selectedDate={selectedDate}
-            tasks={tasks}
-            onAddTask={() => {
-              setEditingTask(null);
-              setIsFormOpen(true);
-            }}
-            onEditTask={handleEditTask}
-            onDeleteTask={handleDeleteTask}
-          />
+        <div className="flex gap-6">
+          <div className="w-[400px]">
+            <Calendar
+              selectedDate={selectedDate}
+              currentMonth={currentMonth}
+              onDateSelect={setSelectedDate}
+              tasks={tasks}
+              onPrevMonth={() => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1))}
+              onNextMonth={() => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1))}
+            />
+          </div>
+
+          <div className="flex-1 max-w-3xl">
+            <TaskList
+              data-component="task-list"
+              selectedDate={selectedDate}
+              tasks={filteredTasks}
+              onAddTask={() => {
+                setEditingTask(null);
+                setIsFormOpen(true);
+              }}
+              onEditTask={handleEditTask}
+              onDeleteTask={handleDeleteTask}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+            />
+          </div>
         </div>
       </div>
 
