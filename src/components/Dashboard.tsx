@@ -3,7 +3,6 @@ import { useUser } from '@clerk/clerk-react';
 import Calendar from './Calendar';
 import TaskList from './TaskList';
 import TaskForm from './TaskForm';
-import Navigation from './Navigation';
 import { Task } from '../types';
 import { taskService } from '../services/taskService';
 import SearchBar from './SearchBar';
@@ -110,53 +109,49 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <Navigation />
-      
-      <div className="flex-1 p-6 overflow-hidden">
-        <div className="mb-6">
-          <SearchBar
+    <div className="flex-1 p-6 overflow-hidden">
+      <div className="mb-6">
+        <SearchBar
+          tasks={tasks}
+          onTaskSelect={(task) => {
+            setSelectedDate(new Date(task.date));
+            // Găsim referința la TaskList și setăm task-ul selectat
+            const taskListRef = document.querySelector('[data-component="task-list"]');
+            if (taskListRef) {
+              taskListRef.dispatchEvent(
+                new CustomEvent('selectTask', { detail: task })
+              );
+            }
+          }}
+        />
+      </div>
+
+      <div className="flex gap-6">
+        <div className="w-[400px]">
+          <Calendar
+            selectedDate={selectedDate}
+            currentMonth={currentMonth}
+            onDateSelect={setSelectedDate}
             tasks={tasks}
-            onTaskSelect={(task) => {
-              setSelectedDate(new Date(task.date));
-              // Găsim referința la TaskList și setăm task-ul selectat
-              const taskListRef = document.querySelector('[data-component="task-list"]');
-              if (taskListRef) {
-                taskListRef.dispatchEvent(
-                  new CustomEvent('selectTask', { detail: task })
-                );
-              }
-            }}
+            onPrevMonth={() => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1))}
+            onNextMonth={() => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1))}
           />
         </div>
 
-        <div className="flex gap-6">
-          <div className="w-[400px]">
-            <Calendar
-              selectedDate={selectedDate}
-              currentMonth={currentMonth}
-              onDateSelect={setSelectedDate}
-              tasks={tasks}
-              onPrevMonth={() => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1))}
-              onNextMonth={() => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1))}
-            />
-          </div>
-
-          <div className="flex-1 max-w-3xl">
-            <TaskList
-              data-component="task-list"
-              selectedDate={selectedDate}
-              tasks={filteredTasks}
-              onAddTask={() => {
-                setEditingTask(null);
-                setIsFormOpen(true);
-              }}
-              onEditTask={handleEditTask}
-              onDeleteTask={handleDeleteTask}
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-            />
-          </div>
+        <div className="flex-1 max-w-3xl">
+          <TaskList
+            data-component="task-list"
+            selectedDate={selectedDate}
+            tasks={filteredTasks}
+            onAddTask={() => {
+              setEditingTask(null);
+              setIsFormOpen(true);
+            }}
+            onEditTask={handleEditTask}
+            onDeleteTask={handleDeleteTask}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+          />
         </div>
       </div>
 

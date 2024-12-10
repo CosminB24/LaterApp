@@ -1,16 +1,29 @@
-import React, { useState } from 'react';
-import { Calendar, Bell } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, Bell, Crown } from 'lucide-react';
 import laterLogo from '../assets/later_logo.png';
 import { useClerk, useUser } from "@clerk/clerk-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import LogoutIcon from '@mui/icons-material/Logout';
 import { DarkModeSwitch } from 'react-toggle-dark-mode';
 
-export default function Navigation() {
+interface NavigationProps {
+  selected: string;
+  setSelected: (value: string) => void;
+}
+
+export default function Navigation({ selected, setSelected }: NavigationProps) {
   const { signOut } = useClerk();
   const { user } = useUser();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    const path = location.pathname.substring(1);
+    if (path === 'dashboard') setSelected('dashboard');
+    else if (path === 'premium') setSelected('premium');
+    else if (path === 'user-profile') setSelected('user-profile');
+  }, [location.pathname, setSelected]);
 
   const toggleDarkMode = (checked: boolean) => {
     setIsDarkMode(checked);
@@ -23,8 +36,8 @@ export default function Navigation() {
   };
 
   return (
-    <nav className="w-64 h-screen bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-6">
-      <div className="flex flex-col h-full">
+    <nav className="fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 overflow-y-auto">
+      <div className="p-6 flex flex-col h-full">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-8">
             <img 
@@ -36,20 +49,37 @@ export default function Navigation() {
           </div>
 
           <div className="space-y-1">
-            <button className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/50 rounded-lg">
+            <button 
+              onClick={() => { navigate('/dashboard'); setSelected('dashboard'); }}
+              className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium ${
+                selected === 'dashboard' ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/50' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+              } rounded-lg`}
+            >
               <Calendar className="w-5 h-5" />
               Calendar
+            </button>
+            
+            <button 
+              onClick={() => { navigate('/premium'); setSelected('premium'); }}
+              className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium ${
+                selected === 'premium' ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/50' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+              } rounded-lg`}
+            >
+              <Crown className="w-5 h-5" />
+              Premium
             </button>
           </div>
         </div>
 
         {/* Footer cu Avatar, Notificări și Dark Mode */}
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 mt-auto">
           <div className="flex items-center justify-between">
             {/* Avatar și Nume Utilizator */}
             <button 
-              onClick={() => navigate('/user-profile')}
-              className="flex items-center gap-3 text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400"
+              onClick={() => { navigate('/user-profile'); setSelected('user-profile'); }}
+              className={`flex items-center gap-3 text-sm font-medium ${
+                selected === 'user-profile' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200 hover:text-blue-600 dark:hover:text-blue-400'
+              }`}
             >
               <img
                 src={user?.imageUrl}
