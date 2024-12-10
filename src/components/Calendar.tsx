@@ -49,10 +49,10 @@ export default function Calendar({ selectedDate, currentMonth, onDateSelect, tas
   ];
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 p-6">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-2">
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-400">
             {format(currentMonth, 'MMMM yyyy', { locale: ro })}
           </h2>
           <button
@@ -76,7 +76,7 @@ export default function Calendar({ selectedDate, currentMonth, onDateSelect, tas
           <button
             onClick={onNextMonth}
             disabled={isSameMonth(currentMonth, MAX_DATE)}
-            className={`btn-icon hover:bg-gray-100 ${
+            className={`btn-icon hover:bg-gray-100 dark:bg-gray-700 ${
               isSameMonth(currentMonth, MAX_DATE) ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
