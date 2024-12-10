@@ -5,6 +5,7 @@ import { useClerk, useUser } from "@clerk/clerk-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import LogoutIcon from '@mui/icons-material/Logout';
 import { DarkModeSwitch } from 'react-toggle-dark-mode';
+import { userService } from '../services/userService';
 
 interface NavigationProps {
   selected: string;
@@ -17,6 +18,18 @@ export default function Navigation({ selected, setSelected }: NavigationProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
+
+  useEffect(() => {
+    const checkPremiumStatus = async () => {
+      if (user?.id) {
+        const status = await userService.getUserPremiumStatus(user.id);
+        setIsPremium(status);
+      }
+    };
+
+    checkPremiumStatus();
+  }, [user?.id]);
 
   useEffect(() => {
     const path = location.pathname.substring(1);
@@ -45,7 +58,14 @@ export default function Navigation({ selected, setSelected }: NavigationProps) {
               alt="Later Logo"
               className="w-8 h-8"
             />
-            <span className="text-xl font-semibold text-gray-900 dark:text-white">Later</span>
+            <div className="flex items-center">
+              <span className="text-xl font-semibold text-gray-900 dark:text-white">
+                Later
+              </span>
+              {isPremium && (
+                <Crown className="ml-2 w-5 h-5 text-yellow-500" />
+              )}
+            </div>
           </div>
 
           <div className="space-y-1">

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Check } from 'lucide-react';
+import stripePromise from '../../config/stripe';
 
 interface PricingCardProps {
   title: string;
@@ -18,6 +19,44 @@ export default function PricingCard({
   buttonText,
   recommended = false
 }: PricingCardProps) {
+  const handleSubscribe = async () => {
+    const stripe = await stripePromise;
+    
+    if (!stripe) {
+      console.error('Stripe nu a fost inițializat corect');
+      return;
+    }
+
+
+    const PRICE_IDS = {
+      monthly: 'price_1QUVWdDyYfQccp15Kuk4Pv3a', 
+      yearly: 'price_1QUVYkDyYfQccp15vxQN60kT'  
+    };
+
+    const priceId = period === 'lună' ? PRICE_IDS.monthly : PRICE_IDS.yearly;
+
+    try {
+      // Redirecționează către Stripe Checkout
+      const { error } = await stripe.redirectToCheckout({
+        lineItems: [
+          {
+            price: priceId,
+            quantity: 1,
+          },
+        ],
+        mode: 'subscription',
+        successUrl: `${window.location.origin}/premium/success`,
+        cancelUrl: `${window.location.origin}/premium`,
+      });
+
+      if (error) {
+        console.error('Eroare:', error);
+      }
+    } catch (err) {
+      console.error('Eroare la procesarea plății:', err);
+    }
+  };
+
   return (
     <div className={`
       relative bg-white dark:bg-gray-800 rounded-2xl shadow-sm 
@@ -52,12 +91,15 @@ export default function PricingCard({
       </div>
 
       <div className="p-8">
-        <button className={`
-          w-full py-3 px-4 rounded-lg font-medium transition-all duration-200
-          ${recommended 
-            ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl' 
-            : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600'}
-        `}>
+        <button 
+          onClick={handleSubscribe}
+          className={`
+            w-full py-3 px-4 rounded-lg font-medium transition-all duration-200
+            ${recommended 
+              ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl' 
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600'}
+          `}
+        >
           {buttonText}
         </button>
       </div>
