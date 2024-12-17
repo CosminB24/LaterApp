@@ -29,9 +29,9 @@ export default function SearchBar({ tasks, onTaskSelect }: SearchBarProps) {
   useEffect(() => {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      const filtered = tasks.filter(task =>
-        task.title.toLowerCase().includes(query) ||
-        task.description?.toLowerCase().includes(query)
+      const filtered = tasks.filter(task => 
+        task?.title?.toLowerCase().includes(query) ||
+        task?.description?.toLowerCase().includes(query) || false
       );
       setFilteredTasks(filtered);
     } else {
