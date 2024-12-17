@@ -1,56 +1,80 @@
 import React from 'react';
+import { loadStripe } from '@stripe/stripe-js';
 import { Check } from 'lucide-react';
-import stripePromise from '../../config/stripe';
 
-interface PricingCardProps {
+const STRIPE_PK = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+
+if (!STRIPE_PK) {
+  throw new Error('Stripe Publishable Key nu este setat în variabilele de mediu');
+}
+
+const stripePromise = loadStripe(STRIPE_PK);
+
+type PricingCardProps = {
   title: string;
   price: string;
   period: string;
   features: string[];
-  buttonText: string;
+  type: 'monthly' | 'yearly';
+  priceId: string;
   recommended?: boolean;
-}
+};
 
-export default function PricingCard({
+const PricingCard: React.FC<PricingCardProps> = ({
   title,
   price,
   period,
   features,
-  buttonText,
+  type,
+  priceId,
   recommended = false
-}: PricingCardProps) {
+}) => {
+  console.log('Props primite în PricingCard:', {
+    title,
+    price,
+    period,
+    features,
+    type,
+    priceId,
+    recommended
+  });
+
   const handleSubscribe = async () => {
-    const stripe = await stripePromise;
-    
-    if (!stripe) {
-      console.error('Stripe nu a fost inițializat corect');
-      return;
-    }
-
-
-    const PRICE_IDS = {
-      monthly: 'price_1QUVWdDyYfQccp15Kuk4Pv3a', 
-      yearly: 'price_1QUVYkDyYfQccp15vxQN60kT'  
-    };
-
-    const priceId = period === 'lună' ? PRICE_IDS.monthly : PRICE_IDS.yearly;
-
     try {
-      // Redirecționează către Stripe Checkout
-      const { error } = await stripe.redirectToCheckout({
+      console.log('Inițializare checkout Stripe...');
+      console.log('PriceId primit:', priceId);
+      console.log('Tip:', type);
+      
+      if (!priceId || typeof priceId !== 'string') {
+        console.error('Price ID invalid:', priceId);
+        return;
+      }
+
+      const stripe = await stripePromise;
+      
+      if (!stripe) {
+        console.error('Stripe nu a fost inițializat corect');
+        return;
+      }
+
+      const checkoutOptions = {
         lineItems: [
           {
-            price: priceId,
-            quantity: 1,
-          },
+            price: priceId.trim(),
+            quantity: 1
+          }
         ],
-        mode: 'subscription',
-        successUrl: `${window.location.origin}/premium/success`,
-        cancelUrl: `${window.location.origin}/premium`,
-      });
+        mode: 'subscription' as const,
+        successUrl: `${window.location.origin}/premium/success?session_id={CHECKOUT_SESSION_ID}&type=${type}`,
+        cancelUrl: `${window.location.origin}/premium`
+      };
+
+      console.log('Opțiuni checkout:', checkoutOptions);
+
+      const { error } = await stripe.redirectToCheckout(checkoutOptions);
 
       if (error) {
-        console.error('Eroare:', error);
+        console.error('Eroare la redirectare către Stripe:', error);
       }
     } catch (err) {
       console.error('Eroare la procesarea plății:', err);
@@ -59,50 +83,58 @@ export default function PricingCard({
 
   return (
     <div className={`
-      relative bg-white dark:bg-gray-800 rounded-2xl shadow-sm 
-      ${recommended ? 'border-2 border-blue-500' : 'border border-gray-200 dark:border-gray-700'}
-      flex flex-col justify-between
+      bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-8
+      ${recommended ? 'border-2 border-blue-500 relative' : ''}
+      flex flex-col h-full
     `}>
       {recommended && (
-        <div className="absolute -top-5 left-0 right-0 flex justify-center">
+        <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
           <span className="bg-blue-500 text-white text-sm font-medium px-4 py-1 rounded-full">
             Recomandat
           </span>
         </div>
       )}
 
-      <div className="p-8 flex-1">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">{title}</h3>
-        <div className="flex items-baseline mb-6">
-          <span className="text-4xl font-bold text-gray-900 dark:text-white">{price}</span>
-          <span className="text-gray-500 dark:text-gray-400 ml-1">€/{period}</span>
+      <div className="text-center">
+        <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">
+          {title}
+        </h3>
+        <div className="mt-4 flex items-baseline justify-center">
+          <span className="text-5xl font-extrabold text-gray-900 dark:text-white">
+            {price}
+          </span>
+          <span className="ml-1 text-xl font-semibold text-gray-500 dark:text-gray-400">
+            €/{period}
+          </span>
         </div>
-
-        <ul className="space-y-4 mb-8">
-          {features.map((feature, index) => (
-            <li key={index} className="flex items-center gap-3">
-              <div className="flex-shrink-0 w-5 h-5 bg-blue-50 dark:bg-blue-900/50 rounded-full flex items-center justify-center">
-                <Check className="w-3 h-3 text-blue-600 dark:text-blue-400" />
-              </div>
-              <span className="text-gray-600 dark:text-gray-300">{feature}</span>
-            </li>
-          ))}
-        </ul>
       </div>
 
-      <div className="p-8">
-        <button 
-          onClick={handleSubscribe}
-          className={`
-            w-full py-3 px-4 rounded-lg font-medium transition-all duration-200
-            ${recommended 
-              ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl' 
-              : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600'}
-          `}
-        >
-          {buttonText}
-        </button>
-      </div>
+      <ul className="mt-8 space-y-4 flex-grow">
+        {features.map((feature, index) => (
+          <li key={index} className="flex items-center">
+            <Check className="w-5 h-5 text-blue-500 mr-3" />
+            <span className="text-base text-gray-600 dark:text-gray-300">
+              {feature}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      <button
+        onClick={handleSubscribe}
+        className={`
+          mt-8 w-full py-3 px-6 rounded-lg font-medium text-center
+          ${recommended 
+            ? 'bg-blue-500 text-white hover:bg-blue-600' 
+            : 'bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600'
+          }
+          transition-colors duration-200
+        `}
+      >
+        {recommended ? 'Economisește 25%' : 'Începe perioada de probă'}
+      </button>
     </div>
   );
-}
+};
+
+export default PricingCard;

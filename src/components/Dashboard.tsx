@@ -109,7 +109,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex-1 p-6 overflow-hidden">
+    <div className="flex-1 p-6 overflow-hidden dark:bg-gray-900">
       <div className="mb-6">
         <SearchBar
           tasks={tasks}

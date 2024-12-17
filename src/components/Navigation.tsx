@@ -13,28 +13,48 @@ interface NavigationProps {
 }
 
 export default function Navigation({ selected, setSelected }: NavigationProps) {
-  const { signOut } = useClerk();
-  const { user } = useUser();
+  const { signOut, user } = useClerk();
   const navigate = useNavigate();
   const location = useLocation();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
 
-  useEffect(() => {
-    const checkPremiumStatus = async () => {
-      if (user?.id) {
+  const checkPremiumStatus = async () => {
+    if (user?.id) {
+      try {
+        console.log('Verificare status premium pentru user:', user.id);
         const status = await userService.getUserPremiumStatus(user.id);
+        console.log('Status premium primit:', status);
         setIsPremium(status);
+      } catch (error) {
+        console.error('Eroare la verificarea statusului premium:', error);
       }
-    };
+    }
+  };
 
+  // Verifică la montarea componentei
+  useEffect(() => {
     checkPremiumStatus();
   }, [user?.id]);
+
+  // Verifică la fiecare 5 secunde
+  useEffect(() => {
+    const interval = setInterval(() => {
+      checkPremiumStatus();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [user?.id]);
+
+  // Verifică la schimbarea rutei
+  useEffect(() => {
+    checkPremiumStatus();
+  }, [location.pathname]);
 
   useEffect(() => {
     const path = location.pathname.substring(1);
     if (path === 'dashboard') setSelected('dashboard');
-    else if (path === 'premium') setSelected('premium');
+    else if (path === 'premium' || path === 'premium/benefits') setSelected('premium');
     else if (path === 'user-profile') setSelected('user-profile');
   }, [location.pathname, setSelected]);
 
@@ -46,6 +66,14 @@ export default function Navigation({ selected, setSelected }: NavigationProps) {
   const handleSignOut = async () => {
     await signOut();
     navigate("/login");
+  };
+
+  const handlePremiumClick = () => {
+    if (isPremium) {
+      navigate('/premium/benefits');
+    } else {
+      navigate('/premium');
+    }
   };
 
   return (
@@ -80,7 +108,7 @@ export default function Navigation({ selected, setSelected }: NavigationProps) {
             </button>
             
             <button 
-              onClick={() => { navigate('/premium'); setSelected('premium'); }}
+              onClick={handlePremiumClick}
               className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium ${
                 selected === 'premium' ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/50' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
               } rounded-lg`}
