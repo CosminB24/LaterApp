@@ -6,6 +6,8 @@ import TaskForm from './TaskForm';
 import { Task } from '../types';
 import { taskService } from '../services/taskService';
 import SearchBar from './SearchBar';
+import { sendEmail } from '../services/emailService';
+import { notificationService } from '../services/notificationService';
 
 export default function Dashboard() {
   const { user } = useUser();
@@ -94,6 +96,65 @@ export default function Dashboard() {
     task.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const testEmail = async () => {
+    try {
+      const result = await sendEmail(
+        user.primaryEmailAddress.emailAddress,
+        'Test Notificare',
+        'Acesta este un email de test pentru sistemul de notificări!'
+      );
+
+      if (result.success) {
+        alert('Email trimis cu succes!');
+      } else {
+        alert('Eroare la trimiterea emailului!');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Eroare la trimiterea emailului!');
+    }
+  };
+
+  const handleUpdateNotifications = async (taskId: string, notifications: TaskNotification) => {
+    try {
+      await taskService.updateTaskNotifications(taskId, notifications);
+      
+      // Găsește task-ul și programează notificările
+      const task = tasks.find(t => t.id === taskId);
+      if (task && user?.primaryEmailAddress?.emailAddress) {
+        await notificationService.scheduleNotifications(
+          task,
+          user.primaryEmailAddress.emailAddress
+        );
+      }
+
+      setTasks(prevTasks =>
+        prevTasks.map(task =>
+          task.id === taskId
+            ? { ...task, notifications }
+            : task
+        )
+      );
+    } catch (error) {
+      console.error('Error updating notifications:', error);
+      alert('Nu am putut actualiza notificările. Încearcă din nou.');
+    }
+  };
+
+  // Verifică notificările pentru toate task-urile la încărcarea componentei
+  useEffect(() => {
+    if (tasks.length > 0 && user?.primaryEmailAddress?.emailAddress) {
+      tasks.forEach(task => {
+        if (task.notifications?.enabled) {
+          notificationService.scheduleNotifications(
+            task,
+            user.primaryEmailAddress.emailAddress
+          );
+        }
+      });
+    }
+  }, [tasks, user?.primaryEmailAddress?.emailAddress]);
+
   if (error) {
     return (
       <div className="p-4 bg-red-50 rounded-lg text-red-600">
@@ -151,6 +212,7 @@ export default function Dashboard() {
             onDeleteTask={handleDeleteTask}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
+            onUpdateNotifications={handleUpdateNotifications}
           />
         </div>
       </div>
@@ -165,6 +227,13 @@ export default function Dashboard() {
         selectedDate={selectedDate}
         editingTask={editingTask || undefined}
       />
+
+      <button
+        onClick={testEmail}
+        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 mb-4"
+      >
+        Testează Email
+      </button>
     </div>
   );
 } 

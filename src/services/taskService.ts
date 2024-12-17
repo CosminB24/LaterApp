@@ -1,9 +1,9 @@
 import { db } from '../config/firebase';
-import { collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
-import { Task } from '../types';
+import { collection, addDoc, getDocs, query, where, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { Task, TaskNotification } from '../types';
 
-class TaskService {
-  async getTasks(userId: string): Promise<Task[]> {
+export const taskService = {
+  getTasks: async (userId: string): Promise<Task[]> => {
     const tasksRef = collection(db, 'tasks');
     const q = query(tasksRef, where('userId', '==', userId));
     const querySnapshot = await getDocs(q);
@@ -12,28 +12,34 @@ class TaskService {
       id: doc.id,
       ...doc.data()
     } as Task));
-  }
+  },
 
-  async addTask(userId: string, task: Omit<Task, 'id' | 'userId'>): Promise<Task> {
+  addTask: async (userId: string, task: Omit<Task, 'id' | 'userId'>): Promise<Task> => {
     const tasksRef = collection(db, 'tasks');
-    const taskWithUser = { ...task, userId };
-    const docRef = await addDoc(tasksRef, taskWithUser);
+    const docRef = await addDoc(tasksRef, {
+      ...task,
+      userId
+    });
     
     return {
       id: docRef.id,
-      ...taskWithUser
+      userId,
+      ...task
     };
-  }
+  },
 
-  async updateTask(taskId: string, task: Partial<Task>): Promise<void> {
+  updateTask: async (taskId: string, task: Partial<Task>): Promise<void> => {
     const taskRef = doc(db, 'tasks', taskId);
     await updateDoc(taskRef, task);
-  }
+  },
 
-  async deleteTask(taskId: string): Promise<void> {
+  deleteTask: async (taskId: string): Promise<void> => {
     const taskRef = doc(db, 'tasks', taskId);
     await deleteDoc(taskRef);
-  }
-}
+  },
 
-export const taskService = new TaskService(); 
+  updateTaskNotifications: async (taskId: string, notifications: TaskNotification): Promise<void> => {
+    const taskRef = doc(db, 'tasks', taskId);
+    await updateDoc(taskRef, { notifications });
+  }
+}; 

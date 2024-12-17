@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { Plus, Edit2, Trash2, Clock, Search } from 'lucide-react';
+import { Plus, Edit2, Trash2, Clock, Search, Bell } from 'lucide-react';
 import { Task } from '../types';
 import WeatherWidget from './WeatherWidget';
+import NotificationModal from './NotificationModal';
 
 interface TaskListProps {
   selectedDate: Date;
@@ -12,6 +13,7 @@ interface TaskListProps {
   onDeleteTask: (taskId: string) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  onUpdateNotifications: (taskId: string, notifications: TaskNotification) => void;
 }
 
 export default function TaskList({ 
@@ -21,9 +23,11 @@ export default function TaskList({
   onEditTask, 
   onDeleteTask,
   searchQuery,
-  onSearchChange
+  onSearchChange,
+  onUpdateNotifications
 }: TaskListProps) {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [showNotificationsModal, setShowNotificationsModal] = useState<string | null>(null);
   
   const dayTasks = tasks
     .filter(task => task.date === format(selectedDate, 'yyyy-MM-dd'))
@@ -45,6 +49,11 @@ export default function TaskList({
       element?.removeEventListener('selectTask', handleTaskSelect as EventListener);
     };
   }, []);
+
+  const handleNotificationSave = (taskId: string, notifications: TaskNotification) => {
+    onUpdateNotifications(taskId, notifications);
+    setShowNotificationsModal(null);
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -117,6 +126,17 @@ export default function TaskList({
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowNotificationsModal(task.id);
+                        }}
+                        className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-md"
+                      >
+                        <Bell className={`w-3.5 h-3.5 ${
+                          task.notifications?.enabled ? 'text-blue-500' : ''
+                        }`} />
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -130,6 +150,19 @@ export default function TaskList({
         selectedDate={selectedDate}
         selectedTask={selectedTask}
       />
+
+      {showNotificationsModal && (
+        <NotificationModal
+          isOpen={true}
+          onClose={() => setShowNotificationsModal(null)}
+          onSave={(notifications) => 
+            handleNotificationSave(showNotificationsModal, notifications)
+          }
+          currentNotifications={
+            tasks.find(t => t.id === showNotificationsModal)?.notifications
+          }
+        />
+      )}
     </div>
   );
 }
