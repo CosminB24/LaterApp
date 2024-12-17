@@ -92,8 +92,8 @@ export default function Dashboard() {
   };
 
   const filteredTasks = tasks.filter(task => 
-    task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    task.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    task?.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    task?.description?.toLowerCase().includes(searchQuery.toLowerCase()) || false
   );
 
   const testEmail = async () => {
