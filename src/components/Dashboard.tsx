@@ -119,12 +119,18 @@ export default function Dashboard() {
     try {
       await taskService.updateTaskNotifications(taskId, notifications);
       
+      // Verificăm dacă avem un utilizator valid și email
+      const userEmail = user?.primaryEmailAddress?.emailAddress;
+      if (!userEmail) {
+        throw new Error('Nu s-a găsit adresa de email a utilizatorului');
+      }
+
       // Găsește task-ul și programează notificările
       const task = tasks.find(t => t.id === taskId);
-      if (task && user?.primaryEmailAddress?.emailAddress) {
+      if (task) {
         await notificationService.scheduleNotifications(
           task,
-          user.primaryEmailAddress.emailAddress
+          userEmail  // Folosim email-ul utilizatorului curent
         );
       }
 
@@ -141,17 +147,20 @@ export default function Dashboard() {
     }
   };
 
-  // Verifică notificările pentru toate task-urile la încărcarea componentei
+  // Actualizăm și useEffect-ul pentru verificarea notificărilor
   useEffect(() => {
-    if (tasks.length > 0 && user?.primaryEmailAddress?.emailAddress) {
-      tasks.forEach(task => {
-        if (task.notifications?.enabled) {
-          notificationService.scheduleNotifications(
-            task,
-            user.primaryEmailAddress.emailAddress
-          );
-        }
-      });
+    if (tasks.length > 0) {
+      const userEmail = user?.primaryEmailAddress?.emailAddress;
+      if (userEmail) {
+        tasks.forEach(task => {
+          if (task.notifications?.enabled) {
+            notificationService.scheduleNotifications(
+              task,
+              userEmail  // Folosim email-ul utilizatorului curent
+            );
+          }
+        });
+      }
     }
   }, [tasks, user?.primaryEmailAddress?.emailAddress]);
 
@@ -228,12 +237,6 @@ export default function Dashboard() {
         editingTask={editingTask || undefined}
       />
 
-      <button
-        onClick={testEmail}
-        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 mb-4"
-      >
-        Testează Email
-      </button>
     </div>
   );
 } 

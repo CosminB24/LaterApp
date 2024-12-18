@@ -13,6 +13,8 @@ import PremiumBenefits from './components/PremiumBenefits';
 import ProtectedPremiumRoute from './components/ProtectedPremiumRoute';
 import ProtectedNonPremiumRoute from './components/ProtectedNonPremiumRoute';
 import emailjs from '@emailjs/browser';
+import DevelopmentLogs from './components/DevelopmentLogs';
+import Suggestions from './components/Suggestions';
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -66,6 +68,14 @@ function App() {
                 <Route 
                   path="/user-profile" 
                   element={<UserProfile />} 
+                />
+                <Route
+                  path="/logs"
+                  element={<DevelopmentLogs />}
+                />
+                <Route
+                  path="/suggestions"
+                  element={<Suggestions />}
                 />
               </Routes>
             </main>

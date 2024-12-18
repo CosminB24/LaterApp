@@ -92,7 +92,7 @@ export default function Premium() {
         <div className="grid md:grid-cols-2 gap-8 mb-16">
           <PricingCard
             title="Lunar"
-            price="9.99"
+            price="2.99"
             period="lună"
             features={[
               'Toate funcțiile premium',
@@ -103,11 +103,11 @@ export default function Premium() {
             buttonText="Începe perioada de probă"
             recommended={false}
             type="monthly"
-            priceId="price_1QUVWdDyYfQccp15Kuk4Pv3a"
+            priceId="price_1QXNj6DyYfQccp15QwZRfmuv"
           />
           <PricingCard
             title="Anual"
-            price="89.99"
+            price="26.99"
             period="an"
             features={[
               'Toate funcțiile premium',
@@ -119,7 +119,7 @@ export default function Premium() {
             buttonText="Economisește 25%"
             recommended={true}
             type="yearly"
-            priceId="price_1QUVYkDyYfQccp15vxQN60kT"
+            priceId="price_1QXNmGDyYfQccp15DPK8aG8D"
           />
         </div>
 

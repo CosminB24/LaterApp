@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Bell, Crown } from 'lucide-react';
+import { Calendar, Bell, Crown, FileText, Lightbulb } from 'lucide-react';
 import laterLogo from '../assets/later_logo.png';
 import { useClerk, useUser } from "@clerk/clerk-react";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -116,6 +116,26 @@ export default function Navigation({ selected, setSelected }: NavigationProps) {
               <Crown className="w-5 h-5" />
               Premium
             </button>
+
+            <button 
+              onClick={() => { navigate('/suggestions'); setSelected('suggestions'); }}
+              className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium ${
+                selected === 'suggestions' ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/50' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+              } rounded-lg`}
+            >
+              <Lightbulb className="w-5 h-5" />
+              Sugestii
+            </button>
+
+            <button 
+              onClick={() => { navigate('/logs'); setSelected('logs'); }}
+              className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium ${
+                selected === 'logs' ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/50' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+              } rounded-lg`}
+            >
+              <FileText className="w-5 h-5" />
+              Development Log
+            </button>
           </div>
         </div>
 
@@ -160,6 +180,10 @@ export default function Navigation({ selected, setSelected }: NavigationProps) {
             <LogoutIcon className="w-5 h-5" />
             Deconectare
           </button>
+
+          <div className="absolute bottom-2 left-2 text-xs text-gray-500 dark:text-gray-400">
+         v1.3.0
+       </div>
         </div>
       </div>
     </nav>
