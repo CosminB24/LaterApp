@@ -10,6 +10,7 @@ export interface Task {
   time: string;
   description?: string;
   notifications?: TaskNotification;
+  completed?: boolean;
 }
 
 export interface DayTasks {
@@ -21,4 +22,10 @@ export interface WeatherData {
   description: string;
   icon: string;
   city: string;
+}
+
+export interface SubTask {
+  title: string;
+  suggestedTime: string;
+  description?: string;
 }

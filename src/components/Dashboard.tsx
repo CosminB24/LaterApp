@@ -179,6 +179,28 @@ export default function Dashboard() {
     }
   };
 
+  const handleCreateTask = async (taskData: { date: string; time: string; title: string }) => {
+    if (!user?.id) return;
+    
+    try {
+      const newTask = await taskService.addTask(user.id, {
+        title: taskData.title,
+        date: taskData.date,
+        time: taskData.time,
+        description: '',
+        notifications: {
+          enabled: false,
+          intervals: []
+        },
+        completed: false
+      });
+      
+      setTasks(prevTasks => [...prevTasks, newTask]);
+    } catch (error) {
+      console.error('Eroare la crearea task-ului:', error);
+    }
+  };
+
   if (error) {
     return (
       <div className="p-4 bg-red-50 rounded-lg text-red-600">
@@ -227,11 +249,13 @@ export default function Dashboard() {
           <TaskList
             data-component="task-list"
             selectedDate={selectedDate}
+            setSelectedDate={setSelectedDate}
             tasks={filteredTasks}
             onAddTask={() => {
               setEditingTask(null);
               setIsFormOpen(true);
             }}
+            onCreateTask={handleCreateTask}
             onEditTask={handleEditTask}
             onDeleteTask={handleDeleteTask}
             searchQuery={searchQuery}

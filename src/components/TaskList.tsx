@@ -4,11 +4,14 @@ import { Plus, Edit2, Trash2, Clock, Search, Bell, Check } from 'lucide-react';
 import { Task } from '../types';
 import WeatherWidget from './WeatherWidget';
 import NotificationModal from './NotificationModal';
+import VoiceInput from './VoiceInput';
 
 interface TaskListProps {
   selectedDate: Date;
+  setSelectedDate: (date: Date) => void;
   tasks: Task[];
   onAddTask: () => void;
+  onCreateTask: (taskData: { date: string; time: string; title: string }) => void;
   onEditTask: (task: Task) => void;
   onDeleteTask: (taskId: string) => void;
   searchQuery: string;
@@ -19,8 +22,10 @@ interface TaskListProps {
 
 export default function TaskList({ 
   selectedDate, 
+  setSelectedDate, 
   tasks, 
   onAddTask, 
+  onCreateTask, 
   onEditTask, 
   onDeleteTask,
   searchQuery,
@@ -61,6 +66,11 @@ export default function TaskList({
     setShowNotificationsModal(null);
   };
 
+  const handleVoiceInput = (taskData: { date: string; time: string; title: string }) => {
+    setSelectedDate(new Date(taskData.date));
+    onCreateTask(taskData);
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
@@ -85,13 +95,16 @@ export default function TaskList({
               </div>
             )}
           </div>
-          <button
-            onClick={onAddTask}
-            className="btn btn-primary flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            Adaugă
-          </button>
+          <div className="flex items-center gap-2">
+            <VoiceInput onVoiceInput={handleVoiceInput} />
+            <button
+              onClick={onAddTask}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              <Plus className="w-5 h-5" />
+              Adaugă task
+            </button>
+          </div>
         </div>
 
         {dayTasks.length === 0 ? (
