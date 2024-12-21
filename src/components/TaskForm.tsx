@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Task } from '../types';
 import { format, addDays, addWeeks, getDay, isWeekend } from 'date-fns';
+import { aiService } from '../services/aiService';
 
 interface TaskFormProps {
   isOpen: boolean;
@@ -21,6 +22,9 @@ export default function TaskForm({ isOpen, onClose, onSave, selectedDate, editin
   const [excludeWeekends, setExcludeWeekends] = useState(false);
   const [isRecurring, setIsRecurring] = useState(false);
   const [numberOfWeeks, setNumberOfWeeks] = useState(1);
+
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [subTasks, setSubTasks] = useState<SubTask[]>([]);
 
   useEffect(() => {
     if (editingTask) {
@@ -98,6 +102,39 @@ export default function TaskForm({ isOpen, onClose, onSave, selectedDate, editin
     const tasks = generateTasks();
     onSave(tasks);
     onClose();
+  };
+
+  const handleAiAssist = async () => {
+    if (!title) {
+      alert('Te rog completează titlul sarcinii');
+      return;
+    }
+
+    setIsAiLoading(true);
+    try {
+      const suggestions = await aiService.decomposeTask(
+        title,
+        description || '',
+        format(selectedDate, 'yyyy-MM-dd')
+      );
+      
+      setSubTasks(suggestions);
+      
+      // Creăm task-uri multiple din sugestii
+      const tasksToAdd = suggestions.map(suggestion => ({
+        title: suggestion.title,
+        description: suggestion.description || '',
+        date: format(selectedDate, 'yyyy-MM-dd'),
+        time: suggestion.suggestedTime,
+      }));
+      
+      onSave(tasksToAdd);
+    } catch (error) {
+      console.error('Eroare la generarea sugestiilor:', error);
+      alert('Nu am putut genera sugestii. Te rog încearcă din nou.');
+    } finally {
+      setIsAiLoading(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -233,12 +270,33 @@ export default function TaskForm({ isOpen, onClose, onSave, selectedDate, editin
             />
           </div>
 
-          <button
-            type="submit"
-            className="w-full btn btn-primary py-2.5"
-          >
-            {editingTask ? 'Salvează modificările' : 'Adaugă sarcina'}
-          </button>
+          <div className="space-y-4 mt-4">
+            <button
+              type="button"
+              onClick={handleAiAssist}
+              disabled={isAiLoading}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium disabled:opacity-50"
+            >
+              {isAiLoading ? (
+                <>
+                  <span className="animate-spin">⚡</span>
+                  Se generează...
+                </>
+              ) : (
+                <>
+                  <span>⚡</span>
+                  AI Assistant
+                </>
+              )}
+            </button>
+
+            <button
+              type="submit"
+              className="w-full px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium"
+            >
+              Adaugă sarcină
+            </button>
+          </div>
         </form>
       </div>
     </div>

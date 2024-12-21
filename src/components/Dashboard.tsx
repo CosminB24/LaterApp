@@ -164,6 +164,21 @@ export default function Dashboard() {
     }
   }, [tasks, user?.primaryEmailAddress?.emailAddress]);
 
+  const handleUpdateTaskStatus = async (taskId: string, completed: boolean) => {
+    try {
+      await taskService.updateTask(taskId, { completed });
+      setTasks(prevTasks =>
+        prevTasks.map(task =>
+          task.id === taskId
+            ? { ...task, completed }
+            : task
+        )
+      );
+    } catch (error) {
+      console.error('Eroare la actualizarea statusului task-ului:', error);
+    }
+  };
+
   if (error) {
     return (
       <div className="p-4 bg-red-50 rounded-lg text-red-600">
@@ -222,6 +237,7 @@ export default function Dashboard() {
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             onUpdateNotifications={handleUpdateNotifications}
+            onUpdateTaskStatus={handleUpdateTaskStatus}
           />
         </div>
       </div>
