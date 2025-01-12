@@ -86,6 +86,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/sso-callback" element={<div>Se procesează...</div>} />
             <Route path="*" element={<RedirectToSignIn />} />
           </Routes>
         </SignedOut>
